@@ -1,8 +1,8 @@
 import express, { Express } from 'express';
-// import ;
+import songRouter from './songs';
 
-const app: Express = express();
+const router: Express = express();
 
-app.use(express.json);
+router.use(songRouter);
 
-export default app;
+export default router;
