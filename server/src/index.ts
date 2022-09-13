@@ -1,8 +1,12 @@
 import express, { Express } from "express";
-import dotenv from "dotenv";
+import {resolve} from "path";
+import {loadEnv} from "./env";
 import api from "./routes/index";
+import { sequelize } from "./db/db";
 
-dotenv.config();
+load();
+console.log(process.env)
+
 
 const app: Express = express();
 const port = process.env.APP_PORT;
@@ -10,6 +14,12 @@ const port = process.env.APP_PORT;
 app.use(express.json());
 app.use("/api", api);
 
-app.listen(port, () => {
-  console.log(`App started at port ${port}`);
+app.listen(port, async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Connection has been established successfully.");
+    console.log(`App started at port ${port}`);
+  } catch (error) {
+    console.error("Unable to connect to the database:", error);
+  }
 });
