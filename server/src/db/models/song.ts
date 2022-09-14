@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db";
 
-export const Song = sequelize.define("song", {
+export const Song = sequelize.define("Song", {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,

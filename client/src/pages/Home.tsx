@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Grid,
   Typography,
@@ -12,96 +12,110 @@ import {
 import { DataGrid, GridRowsProp, GridColDef } from "@mui/x-data-grid";
 
 function Home() {
-  const data = [
-    {
-      artist: "1",
-      name: "1",
-      genre: "1",
-      year: 1,
-    },
-    {
-      artist: "2",
-      name: "2",
-      genre: "2",
-      year: 2,
-    },
-    {
-      artist: "3",
-      name: "3",
-      genre: "3",
-      year: 3,
-    },
-    {
-      artist: "4",
-      name: "4",
-      genre: "4",
-      year: 4,
-    },
-    {
-      artist: "5",
-      name: "5",
-      genre: "5",
-      year: 5,
-    },
-  ];
+  const [data, setData] = useState<IRow[]>([]);
 
-  let rows1: GridRowsProp = data.map((elem, index) => {
-    return {
-      id: index,
-      col1: elem.artist,
-      col2: elem.name,
-      col3: elem.genre,
-      col4: elem.year,
-    };
-  });
+  const [genre, setGenre] = useState("");
+  const [genres, setGenres] = useState<string[]>([]);
+  const [artist, setArtist] = useState("");
+  const [artists, setArtists] = useState<string[]>([]);
+  const [year, setYear] = useState("");
+  const [years, setYears] = useState<number[]>([]);
+  const [selectedPageSize, setSelectedPageSize] = useState(5);
+  const [rows, setRows] = useState<GridRowsProp>([]);
+
+  interface IRow {
+    id: number;
+    artist: string;
+    name: string;
+    genre: string;
+    year: number;
+  }
 
   useEffect(() => {
-    // fetch("/api/song").then();
-    setRows(data.map((elem, index) => {
-      return {
-        id: index,
-        col1: elem.artist,
-        col2: elem.name,
-        col3: elem.genre,
-        col4: elem.year,
-      };
-    }))
+    async function fetchData() {
+      const res = await fetch("/api/song");
+      const json = await res.json();
+      setData(json);
+    }
+
+    fetchData().then(() => {
+      setRows(
+        data.map((elem: IRow) => {
+          return {
+            id: elem.id,
+            col1: elem.artist,
+            col2: elem.name,
+            col3: elem.genre,
+            col4: elem.year,
+          };
+        })
+      );
+      setArtists(
+        data.map((elem: IRow) => {
+          return elem.artist;
+        })
+      );
+      setGenres(
+        data.map((elem: IRow) => {
+          return elem.genre;
+        })
+      );
+      setYears([
+        ...data.map((elem: IRow) => {
+          return elem.year;
+        }),
+      ]);
+    });
   }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      const res = await fetch(
+        `/api/song?genre=${genre}&artist=${artist}&year=${year}`
+      );
+      const data = await res.json();
+      setData(data);
+      setRows(
+        data.map((elem: IRow) => {
+          return {
+            id: elem.id,
+            col1: elem.artist,
+            col2: elem.name,
+            col3: elem.genre,
+            col4: elem.year,
+          };
+        })
+      );
+    }
+
+    fetchData();
+  }, [genre, artist, year]);
 
   const columns: GridColDef[] = [
     { field: "col1", headerName: "Исполнитель", minWidth: 150 },
-    { field: "col2", headerName: "Песня" },
+    { field: "col2", headerName: "Песня", minWidth: 250 },
     { field: "col3", headerName: "Жанр" },
     { field: "col4", headerName: "Год" },
   ];
 
-  const [genre, setGenre] = useState("");
-  const [genres, setGenres] = useState([]);
-  const [artist, setArtist] = useState("");
-  const [artists, setArtists] = useState([]);
-  const [year, setYear] = useState("");
-  const [years, setYears] = useState([]);
-  const [selectedPageSize, setSelectedPageSize] = useState(5);
-  const [rows, setRows] = useState<GridRowsProp>([]);
-
-  const handleGenreChange = (event: SelectChangeEvent) => {
+  function handleGenreChange(event: SelectChangeEvent) {
     const genre = event.target.value;
-    setGenre(genre as string);
-  };
+    return setGenre(genre as string);
+  }
 
-  const handleArtistChange = (event: SelectChangeEvent) => {
+  function handleArtistChange(event: SelectChangeEvent) {
     const artist = event.target.value;
-    setArtist(artist as string);
-  };
+    return setArtist(artist as string);
+  }
 
-  const handleYearChange = (event: SelectChangeEvent) => {
-    const selYear = event.target.value;
-    setYear(selYear as string);
-  };
+  function handleYearChange(event: SelectChangeEvent) {
+    const year = event.target.value;
+    return setYear(year as string);
+  }
 
-  const changePageSize = (pageSize: number) => {
+  function changePageSize(pageSize: number) {
     setSelectedPageSize(pageSize);
-  };
+  }
 
   return (
     // Playlist
@@ -151,10 +165,14 @@ function Home() {
                       value={artist}
                       onChange={handleArtistChange}
                     >
-                      {}
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
+                      <MenuItem value={"none"}>Все</MenuItem>
+                      {[...new Set(artists)].map((elem, index) => {
+                        return (
+                          <MenuItem value={elem} key={index}>
+                            {elem}
+                          </MenuItem>
+                        );
+                      })}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -166,9 +184,14 @@ function Home() {
                       value={genre}
                       onChange={handleGenreChange}
                     >
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
+                      <MenuItem value={"none"}>Все</MenuItem>
+                      {[...new Set(genres)].map((elem, index) => {
+                        return (
+                          <MenuItem value={elem} key={index}>
+                            {elem}
+                          </MenuItem>
+                        );
+                      })}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -181,9 +204,16 @@ function Home() {
                       onChange={handleYearChange}
                     >
                       <MenuItem value={"none"}>Все</MenuItem>
-                      <MenuItem value={"1"}>1</MenuItem>
-                      <MenuItem value={2}>2</MenuItem>
-                      <MenuItem value={"qwe"}>QWE</MenuItem>
+                      {/* TODO Artists map */}
+                      {[...new Set(years)]
+                        .sort((a, b) => a - b)
+                        .map((elem, index) => {
+                          return (
+                            <MenuItem value={elem} key={index}>
+                              {elem}
+                            </MenuItem>
+                          );
+                        })}
                     </Select>
                   </FormControl>
                 </Grid>
