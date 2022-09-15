@@ -1,4 +1,5 @@
 import express, { Router, Request, Response } from "express";
+import { sequelize } from "../db/db";
 import { Song } from "../db/models/song";
 
 const router: Router = express.Router();
@@ -19,6 +20,21 @@ router.get("/song", async (req: Request, res: Response) => {
   }
   const songs = await Song.findAll();
   return res.status(200).send(songs);
+});
+
+router.get("/song/filters", async (req: Request, res: Response) => {
+  try {
+    const [artists, metaArtists] = await sequelize.query(
+      "SELECT artist FROM Songs"
+    );
+    const [genres, metaGenres] = await sequelize.query(
+      "SELECT genre FROM Songs"
+    );
+    const [years, metaYears] = await sequelize.query("SELECT year FROM Songs");
+    return res.status(200).send({ artists, genres, years });
+  } catch (error) {
+    res.status(500).send({error: "Server error"})
+  }
 });
 
 router.post("/song", async (req: Request, res: Response) => {

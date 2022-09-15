@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Grid,
   Typography,
@@ -14,11 +14,11 @@ import { DataGrid, GridRowsProp, GridColDef } from "@mui/x-data-grid";
 function Home() {
   const [data, setData] = useState<IRow[]>([]);
 
-  const [genre, setGenre] = useState("");
+  const [genre, setGenre] = useState("none");
   const [genres, setGenres] = useState<string[]>([]);
-  const [artist, setArtist] = useState("");
+  const [artist, setArtist] = useState("none");
   const [artists, setArtists] = useState<string[]>([]);
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState("none");
   const [years, setYears] = useState<number[]>([]);
   const [selectedPageSize, setSelectedPageSize] = useState(5);
   const [rows, setRows] = useState<GridRowsProp>([]);
@@ -36,42 +36,48 @@ function Home() {
       const res = await fetch("/api/song");
       const json = await res.json();
       setData(json);
+      const newRows = data.map((elem: IRow) => {
+        return {
+          id: elem.id,
+          col1: elem.artist,
+          col2: elem.name,
+          col3: elem.genre,
+          col4: elem.year,
+        };
+      });
+      setRows(newRows);
     }
 
-    fetchData().then(() => {
-      setRows(
-        data.map((elem: IRow) => {
-          return {
-            id: elem.id,
-            col1: elem.artist,
-            col2: elem.name,
-            col3: elem.genre,
-            col4: elem.year,
-          };
-        })
-      );
-      setArtists(
-        data.map((elem: IRow) => {
-          return elem.artist;
-        })
-      );
-      setGenres(
-        data.map((elem: IRow) => {
-          return elem.genre;
-        })
-      );
-      setYears([
-        ...data.map((elem: IRow) => {
-          return elem.year;
-        }),
-      ]);
-    });
+    async function fetchFilters() {
+      const res = await fetch("/api/song/filters");
+      const json = await res.json();
+      const newArtists = json.artists.map((elem: IRow) => {
+        return elem.artist;
+      });
+      setArtists(newArtists);
+      const newGenres = json.genres.map((elem: IRow) => {
+        return elem.genre;
+      });
+      setGenres(newGenres);
+      const newYears = json.years.map((elem: IRow) => {
+        return elem.year;
+      });
+      setYears(newYears);
+    }
+
+    fetchData();
+    fetchFilters();
   }, []);
 
   useEffect(() => {
     async function fetchData() {
       const res = await fetch(
-        `/api/song?genre=${genre}&artist=${artist}&year=${year}`
+        `/api/song?genre=${genre}&artist=${artist}&year=${year}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
       const data = await res.json();
       setData(data);
