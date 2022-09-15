@@ -5,6 +5,7 @@
 ```sh
 cd client
 npm i
+change package.json proxy
 npm run build
 ```
 
