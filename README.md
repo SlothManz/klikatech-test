@@ -11,7 +11,7 @@ npm run build
 ### Database
 
 ```bash
-cd server/sql
+cd server/src/sql
 mysqldump -uuser -ppassword database_name < test.sql
 ```
 
