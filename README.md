@@ -12,7 +12,7 @@ npm run build
 
 ```bash
 cd server/src/sql
-mysqldump -uuser -ppassword database_name < test.sql
+mysqldump -uuser -ppassword database_name < test_app.sql
 ```
 
 ### Server
